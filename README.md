@@ -1,7 +1,7 @@
 
 # CSV Tools by WRTeam
 
-![CSV Tools Banner](images/og-image.jpg)
+![CSV Tools Banner](images/og-image.csv)
 
 **CSV Tools** is a lightweight, browser-based web app that allows users to **view**, **filter**, **compare**, and **export CSV files** seamlessly. No backend or installation required — just open the page and start working with your data.
 
