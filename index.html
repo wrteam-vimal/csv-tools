@@ -1,134 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WRTeam CSV Tool</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WRTeam CSV Tool</title>
 
-  <!-- Local Favicon and OG images -->
-  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
-  <meta property="og:title" content="WRTeam – Expert App & Web Developers">
-  <meta property="og:description" content="High-quality full-stack web & mobile apps for startups and enterprises. UI/UX, Flutter, React, Node.js.">
-  <meta property="og:image" content="images/og-image.jpg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="WRTeam – Expert App & Web Developers">
-  <meta name="twitter:description" content="High-quality full-stack web & mobile apps for startups and enterprises.">
-  <meta name="twitter:image" content="images/og-image.jpg">
+    <!-- Local Favicon and OG images -->
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    <meta property="og:title" content="WRTeam – Expert App & Web Developers">
+    <meta property="og:description"
+        content="High-quality full-stack web & mobile apps for startups and enterprises. UI/UX, Flutter, React, Node.js.">
+    <meta property="og:image" content="images/og-image.jpg">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WRTeam – Expert App & Web Developers">
+    <meta name="twitter:description" content="High-quality full-stack web & mobile apps for startups and enterprises.">
+    <meta name="twitter:image" content="images/og-image.jpg">
 
-  <!-- External Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-  
+    <!-- External Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
-  <!-- Local CSS and JS -->
-  <link rel="stylesheet" href="css/styles.css" />
- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <script src="js/main.js" defer></script>
+
+    <!-- Local CSS and JS -->
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="js/main.js" defer></script>
 </head>
+
 <body>
 
-<header>
-  <img src="images/logo.svg" alt="WRTeam Logo">
-  <nav>
-    <button onclick="showTab('main')">Main</button>
-    <button onclick="showTab('compare')">Compare</button>
-  </nav>
-</header>
+    <header>
+        <img src="images/logo.svg" alt="WRTeam Logo">
+        <nav>
+            <button onclick="showTab('main')">Main</button>
+            <button onclick="showTab('compare')">Compare</button>
+        </nav>
+    </header>
 
-<main>
-    <!-- Loading Overlay -->
-<div id="loadingOverlay">
-  <div class="spinner"></div>
-</div>
+    <main>
+        <!-- Loading Overlay -->
+        <div id="loadingOverlay">
+            <div class="spinner"></div>
+        </div>
 
-  <!-- Main Section -->
-  <div class="section" id="main">
-    <h2>CSV Viewer & Exporter</h2>
-    <div class="controls">
-      <label class="custom-upload">
-        Upload CSV
-        <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
-      </label>
-      <button class="btn" onclick="exportVisibleCSV()">Export Visible Columns</button>
-    </div>
-    <div class="toggle-container" id="columnToggles"></div>
-    <div id="csvTable"></div>
-  </div>
+        <!-- Main Section -->
+        <div class="section" id="main">
+            <h2>CSV Viewer & Exporter</h2>
+            <div class="controls">
+                <label class="custom-upload">
+                    Upload CSV
+                    <input type="file" id="csvFile" accept=".csv" onchange="handleCSV(event)">
+                </label>
+                <button class="btn" onclick="exportVisibleCSV()">Export Visible Columns</button>
+            </div>
+            <div class="toggle-container" id="columnToggles"></div>
+            <div id="csvTable"></div>
+        </div>
 
-  <!-- Compare Section -->
-  <div class="section" id="compare" style="display: none;">
-    <h2>Compare Two CSVs</h2>
-    <div class="controls">
-      <label class="custom-upload">
-        First CSV
-        <input type="file" id="csv1" accept=".csv" />
-      </label>
-      <label class="custom-upload">
-        Second CSV
-        <input type="file" id="csv2" accept=".csv" />
-      </label>
-      <button class="btn" onclick="compareCSV()">Compare & Show Unique</button>
-      <button class="btn" onclick="exportCompareCSV()">Export Unique CSV</button>
-    </div>
-    <div id="compareResult"></div>
-  </div>
-</main>
+        <!-- Compare Section -->
+        <div class="section" id="compare" style="display: none;">
+            <h2>Compare Two CSVs</h2>
+            <div class="controls">
+                <label class="custom-upload">
+                    First CSV
+                    <input type="file" id="csv1" accept=".csv" />
+                </label>
+                <label class="custom-upload">
+                    Second CSV
+                    <input type="file" id="csv2" accept=".csv" />
+                </label>
+                <button class="btn" onclick="compareCSV()">Compare & Show Unique</button>
+                <button class="btn" onclick="exportCompareCSV()">Export Unique CSV</button>
+            </div>
+            <div id="compareResult"></div>
+        </div>
+    </main>
 
-<!-- Footer Section -->
-  <footer class="footer">
-    <div class="footer-container">
+    <!-- Footer Section -->
+    <footer class="footer">
+        <div class="footer-container">
 
-      <!-- Contact Info -->
-      <div class="footer-column align-left">
-        <h3>📞 Connect with Us</h3>
-        <p><i class="fas fa-phone-alt"></i> +91 97979 45459</p>
-        <p><i class="fas fa-envelope"></i>
-          <a href="mailto:Support@wrteam.in">Support@wrteam.in</a>
-        </p>
-      </div>
+            <!-- Contact Info -->
+            <div class="footer-column align-left">
+                <h3>📞 Connect with Us</h3>
+                <p><i class="fas fa-phone-alt"></i> +91 97979 45459</p>
+                <p><i class="fas fa-envelope"></i>
+                    <a href="mailto:Support@wrteam.in">Support@wrteam.in</a>
+                </p>
+            </div>
 
-      <!-- Address -->
-      <div class="footer-column align-center">
-        <h3>📍 Find Us Here</h3>
-        <p><i class="fas fa-map-marker-alt"></i><br />
-          #262‑263, Time Square Empire,<br />
-          SH 42 Mirjapar Highway,<br />
-          Bhuj ‑ Kutch 370001,<br />
-          Gujarat, India
-        </p>
-      </div>
+            <!-- Address -->
+            <div class="footer-column align-center">
+                <h3>📍 Find Us Here</h3>
+                <p><i class="fas fa-map-marker-alt"></i><br />
+                    #262‑263, Time Square Empire,<br />
+                    SH 42 Mirjapar Highway,<br />
+                    Bhuj ‑ Kutch 370001,<br />
+                    Gujarat, India
+                </p>
+            </div>
 
-      <!-- Social Media -->
-      <div class="footer-column align-right">
-        <h3>🔗 Follow Us</h3>
-        <div class="social-icons">
-  <a href="https://instagram.com/wrteam.in" class="instagram" target="_blank"><i class="fab fa-instagram"></i></a>
-  <a href="https://facebook.com/wrteam.in" class="facebook" target="_blank"><i class="fab fa-facebook-f"></i></a>
-  <a href="https://linkedin.com/company/wrteam" class="linkedin" target="_blank"><i class="fab fa-linkedin-in"></i></a>
-  <a href="https://www.youtube.com/c/WRTeam" class="youtube" target="_blank"><i class="fab fa-youtube"></i></a>
-  <a href="https://codecanyon.net/user/wrteam/portfolio" class="codecanyon" target="_blank"><i class="fas fa-code"></i></a>
-</div>
+            <!-- Social Media -->
+            <div class="footer-column align-right">
+                <h3>🔗 Follow Us</h3>
+                <div class="social-icons">
+                    <a href="https://instagram.com/wrteam.in" class="instagram" target="_blank"><i
+                            class="fab fa-instagram"></i></a>
+                    <a href="https://facebook.com/wrteam.in" class="facebook" target="_blank"><i
+                            class="fab fa-facebook-f"></i></a>
+                    <a href="https://linkedin.com/company/wrteam" class="linkedin" target="_blank"><i
+                            class="fab fa-linkedin-in"></i></a>
+                    <a href="https://www.youtube.com/c/WRTeam" class="youtube" target="_blank"><i
+                            class="fab fa-youtube"></i></a>
+                    <a href="https://codecanyon.net/user/wrteam/portfolio" class="codecanyon" target="_blank"><i
+                            class="fas fa-code"></i></a>
+                </div>
 
-      </div>
+            </div>
 
-    </div>
+        </div>
 
-    <!-- Divider -->
-    <div class="footer-divider"></div>
+        <!-- Divider -->
+        <div class="footer-divider"></div>
 
-<!-- Bottom Text -->
-<div class="footer-bottom">
-  © <span id="year"></span> All Rights Reserved & Developed by 
-  <a href="https://wrteam.in" target="_blank">WRTeam</a>
-</div>
+        <!-- Bottom Text -->
+        <div class="footer-bottom">
+            © <span id="year"></span> All Rights Reserved & Developed by
+            <a href="https://wrteam.in" target="_blank">WRTeam</a>
+        </div>
 
-<script>
-  document.getElementById("year").textContent = new Date().getFullYear();
-</script>
+        <script>
+            document.getElementById("year").textContent = new Date().getFullYear();
+        </script>
 
-  </footer>
+    </footer>
 
-  <!-- Optional JS -->
-  <script src="footer.js"></script>
+    <!-- Optional JS -->
+    <script src="footer.js"></script>
 
 </body>
+
 </html>
