@@ -115,10 +115,16 @@
     <!-- Divider -->
     <div class="footer-divider"></div>
 
-    <!-- Bottom Text -->
-    <div class="footer-bottom">
-      © 2025 All Rights Reserved & Designed with 💕 by <a href="https://wrteam.in" target="_blank">WRTeam</a>
-    </div>
+<!-- Bottom Text -->
+<div class="footer-bottom">
+  © <span id="year"></span> All Rights Reserved & Developed by 
+  <a href="https://wrteam.in" target="_blank">WRTeam</a>
+</div>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+
   </footer>
 
   <!-- Optional JS -->
