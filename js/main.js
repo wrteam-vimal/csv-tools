@@ -169,3 +169,85 @@ document.addEventListener("DOMContentLoaded", () => {
         observer.observe(icons[0].parentElement);
     }
 });
+
+function renderToggles() {
+    const container = document.getElementById("columnToggles");
+    container.innerHTML = "";
+
+    const list = document.createElement("div");
+    list.className = "draggable-toggle-list";
+
+    headers.forEach((h, index) => {
+        const item = document.createElement("div");
+        item.className = "toggle-item";
+        item.setAttribute("draggable", "true");
+        item.dataset.index = index;
+
+        item.innerHTML = `
+            <input type="checkbox" ${visibleColumns.includes(h) ? "checked" : ""} onchange="toggleColumn('${h}')">
+            <span>${h}</span>
+        `;
+
+        list.appendChild(item);
+    });
+
+    container.appendChild(list);
+
+    enableDragAndDrop(list);
+}
+
+function toggleColumn(column) {
+    const idx = visibleColumns.indexOf(column);
+    if (idx > -1) {
+        visibleColumns.splice(idx, 1);
+    } else {
+        visibleColumns.push(column);
+    }
+    renderTable();
+}
+
+function enableDragAndDrop(container) {
+    let draggedItem = null;
+
+    container.addEventListener("dragstart", (e) => {
+        if (e.target.classList.contains("toggle-item")) {
+            draggedItem = e.target;
+            setTimeout(() => e.target.classList.add("dragging"), 0);
+        }
+    });
+
+    container.addEventListener("dragend", (e) => {
+        if (draggedItem) draggedItem.classList.remove("dragging");
+        draggedItem = null;
+    });
+
+    container.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(container, e.clientX);
+        if (afterElement == null) {
+            container.appendChild(draggedItem);
+        } else {
+            container.insertBefore(draggedItem, afterElement);
+        }
+    });
+
+    container.addEventListener("drop", () => {
+        const newOrder = Array.from(container.children).map(child => child.querySelector("span").textContent);
+        headers = newOrder;
+        visibleColumns = visibleColumns.filter(col => headers.includes(col)); // ensure order sync
+        renderTable();
+    });
+}
+
+function getDragAfterElement(container, x) {
+    const items = [...container.querySelectorAll(".toggle-item:not(.dragging)")];
+    return items.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = x - box.left - box.width / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
