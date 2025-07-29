@@ -32,7 +32,7 @@ csv-tools/
 ├── js/
 │   └── main.js
 ├── images/
-│   └── logo.svg, og-image.jpg, favicon.ico
+│   └── logo.png, logo.svg, og-image.jpg, favicon.ico
 ├── index.html
 ├── footer.js
 └── README.md
