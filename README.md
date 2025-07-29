@@ -40,23 +40,6 @@ csv-tools/
 
 ---
 
-## 🚀 Getting Started
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/wrteam-vimal/csv-tools.git
-cd csv-tools
-```
-
-### 2. Open in Browser
-
-Simply open `index.html` in your preferred browser.
-
-> No build step or server required. All logic is handled in the browser.
-
----
-
 ## 🔧 Usage
 
 ### 📄 CSV Viewer
