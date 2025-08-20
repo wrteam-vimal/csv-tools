@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Combine CSV - WRTeam</title>
+  <meta name="description" content="Combine multiple CSV files into one, remove duplicates, reorder/group by Country (A→Z), preview, sort, and download the final CSV.">
+  <meta name="keywords" content="CSV combiner, merge CSV, remove duplicates, group by country, sort CSV, WRTeam">
+  <meta name="author" content="WRTeam" />
+  <meta property="og:title" content="CSV Combiner & Deduplicator | WRTeam">
+  <meta property="og:description" content="Combine CSV files, remove duplicates, reorder by Country, preview, sort, and download.">
+  <meta property="og:image" content="images/og-image.jpg">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <!-- Bootstrap (only for grid/utility support, optional) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- Shared Scripts -->
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <img src="images/logo.svg" alt="WRTeam Logo">
+    <nav>
+      <a href="index.html" class="btn">Home</a>
+      <a href="filter.html" class="btn">Filter CSV</a>
+      <a href="compare.html" class="btn">Compare CSV</a>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container my-4">
+    <h2>CSV Combiner & Deduplicator</h2>
+    <div class="card p-4 shadow-sm">
+      <div class="row gx-4">
+
+        <!-- Left Half: Upload + Options -->
+        <div class="col-md-6 border-end">
+          <h4 class="mb-3">Upload CSV Files</h4>
+          <input type="file" id="csvFiles" class="form-control mb-3" multiple accept=".csv">
+
+          <div class="alert alert-warning small-note">
+            <strong>Note:</strong> You can optionally enforce header validation.
+            If enabled, <u>all uploaded CSV files must have the same structure and column headers</u>.
+            If headers are missing, dynamic headers (<code>col1, col2, ...</code>) will be generated.
+          </div>
+
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="checkHeaders">
+            <label class="form-check-label" for="checkHeaders">Check CSV headers before merging</label>
+          </div>
+
+          <button id="processBtn" class="btn btn-primary mb-4">
+            Combine, Remove Duplicates & Group by Country (A→Z)
+          </button>
+
+          <!-- Output Preview -->
+          <div id="output" style="display:none;">
+            <h5>Final CSV Preview (Grouped by Country A–Z)</h5>
+            <div id="resultTable" class="table-responsive border rounded" style="max-height:520px; overflow:auto;">
+              <table class="table table-bordered table-striped mb-0">
+                <thead></thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Half: Statistics -->
+        <div class="col-md-6">
+          <h4 class="mb-3">Statistics</h4>
+          <div id="stats" style="display:none;">
+            <h5>Processing Summary</h5>
+            <ul id="fileStats" class="list-group mb-3"></ul>
+            <div class="alert alert-info">
+              <strong>Total Records:</strong> <span id="totalRecords"></span><br>
+              <strong>Unique Records:</strong> <span id="uniqueRecords"></span>
+            </div>
+            <a id="downloadLink" class="btn btn-success" download="combined.csv">Download Combined CSV</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-bottom">
+      © <span id="year"></span> All Rights Reserved & Developed by
+      <a href="https://wrteam.in" target="_blank">WRTeam</a>
+    </div>
+  </footer>
+  <script src="footer.js"></script>
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Unique Combine CSV Logic -->
+  <script>
+    function parseCSV(text) {
+      const rows = [];
+      let field = '', row = [], insideQuote = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (c === '"') {
+          if (insideQuote && text[i+1] === '"') { field += '"'; i++; }
+          else insideQuote = !insideQuote;
+        } else if (c === ',' && !insideQuote) {
+          row.push(field); field = '';
+        } else if ((c === '\n' || c === '\r') && !insideQuote) {
+          if (c === '\r' && text[i+1] === '\n') i++;
+          row.push(field); rows.push(row); row=[]; field='';
+        } else field += c;
+      }
+      if (field !== '' || row.length) { row.push(field); rows.push(row); }
+      return rows.map(r => r.map(f => f.replace(/^\uFEFF/, '').trim()));
+    }
+    function csvEscape(field) {
+      if (field==null) field='';
+      const needsQuote=/[",\r\n]/.test(field);
+      return needsQuote?`"${String(field).replace(/"/g,'""')}"`:field;
+    }
+    function norm(v){ return (v||'').trim().toLowerCase(); }
+    function escapeHtml(s){ return s.replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    let currentHeaders=[], currentData=[], sortState={};
+
+    document.addEventListener('DOMContentLoaded',()=>{
+      document.getElementById('processBtn').addEventListener('click',async()=>{
+        const files=document.getElementById('csvFiles').files;
+        const checkHeaders=document.getElementById('checkHeaders').checked;
+        const statsBox=document.getElementById('stats');
+        const outputBox=document.getElementById('output');
+        statsBox.style.display=outputBox.style.display='none';
+
+        if(!files.length){alert('Please select at least one CSV file.');return;}
+        let headers=null, combined=[], totalRecords=0, fileStatsHTML='';
+        for(const file of files){
+          const rows=parseCSV(await file.text());
+          if(!rows.length){ fileStatsHTML+=`<li class="list-group-item">${file.name} → 0 records</li>`; continue;}
+          
+          const fileHeader=rows[0].map(h=>h.trim());
+          if(!headers) headers=fileHeader;
+          else if(checkHeaders){
+            if(headers.length!==fileHeader.length || headers.some((h,i)=>norm(h)!==norm(fileHeader[i]))){
+              alert('Header mismatch detected!');return;
+            }
+          }
+          const fileRows=rows.slice(1);
+          totalRecords+=fileRows.length;
+          fileStatsHTML+=`<li class="list-group-item">${file.name} → ${fileRows.length} records</li>`;
+          combined.push(...fileRows.map(r=>r.map(v=>String(v))));
+        }
+        // Deduplicate
+        const seen=new Set(), unique=[];
+        for(const r of combined){const k=r.map(c=>norm(c)).join('\u0001'); if(!seen.has(k)){seen.add(k); unique.push(r);}}
+        
+        if(!headers || !headers.some(h=>h) || !checkHeaders){
+          headers = unique[0].map((_,i)=>`col${i+1}`);
+        }
+
+        // Sort by Country if present
+        const ci=headers.findIndex(h=>h.toLowerCase().includes('country'));
+        if(ci!==-1) unique.sort((a,b)=>norm(a[ci]).localeCompare(norm(b[ci])));
+        
+        currentHeaders=headers; currentData=unique;
+        renderTable(headers,unique);
+        updateDownloadCSV();
+
+        document.getElementById('fileStats').innerHTML=fileStatsHTML;
+        document.getElementById('totalRecords').textContent=totalRecords;
+        document.getElementById('uniqueRecords').textContent=unique.length;
+        statsBox.style.display=outputBox.style.display='block';
+      });
+    });
+
+    function renderTable(headers,data){
+      const thead=document.querySelector('#resultTable thead');
+      const tbody=document.querySelector('#resultTable tbody');
+      thead.innerHTML='<tr>'+headers.map((h,i)=>`<th data-col="${i}">${escapeHtml(h)}</th>`).join('')+'</tr>';
+      tbody.innerHTML=data.map(r=>'<tr>'+headers.map((_,i)=>`<td>${escapeHtml(r[i]||'')}</td>`).join('')+'</tr>').join('');
+      thead.querySelectorAll('th').forEach(th=>{
+        th.addEventListener('click',()=>sortByColumn(parseInt(th.dataset.col)));
+      });
+    }
+    function sortByColumn(col){
+      const asc=!(sortState[col]&&sortState[col]==='asc');
+      currentData.sort((a,b)=>asc?norm(a[col]).localeCompare(norm(b[col])):norm(b[col]).localeCompare(norm(a[col])));
+      sortState={[col]:asc?'asc':'desc'};
+      renderTable(currentHeaders,currentData);
+      updateDownloadCSV();
+      const ths=document.querySelectorAll('#resultTable thead th');
+      ths.forEach((th,i)=>th.classList.remove('sorted-asc','sorted-desc'));
+      ths[col].classList.add(asc?'sorted-asc':'sorted-desc');
+    }
+    function updateDownloadCSV(){
+      if(!currentHeaders.length)return;
+      const csv=[currentHeaders.map(h=>csvEscape(h)).join(',')]
+        .concat(currentData.map(r=>currentHeaders.map((_,i)=>csvEscape(r[i]||'')).join(',')))
+        .join('\r\n');
+      const blob=new Blob([csv],{type:'text/csv'});
+      document.getElementById('downloadLink').href=URL.createObjectURL(blob);
+    }
+  </script>
+</body>
+</html>
