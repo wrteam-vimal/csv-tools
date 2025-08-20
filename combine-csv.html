@@ -13,24 +13,19 @@
   <meta property="og:type" content="website">
   <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 
-  <!-- Shared Styles -->
+  <!-- Styles -->
   <link rel="stylesheet" href="css/styles.css" />
-
-  <!-- Bootstrap (only for grid/utility support, optional) -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  
-  <!-- Shared Scripts -->
-  <script src="js/main.js" defer></script>
 </head>
 <body>
 
   <!-- Header -->
-  <header>
-    <img src="images/logo.svg" alt="WRTeam Logo">
+  <header class="p-3 border-bottom d-flex justify-content-between align-items-center">
+    <img src="images/logo.svg" alt="WRTeam Logo" height="40">
     <nav>
-      <a href="index.html" class="btn">Home</a>
-      <a href="filter.html" class="btn">Filter CSV</a>
-      <a href="compare.html" class="btn">Compare CSV</a>
+      <a href="index.html" class="btn btn-outline-primary me-2">Home</a>
+      <a href="filter.html" class="btn btn-outline-primary me-2">Filter CSV</a>
+      <a href="compare.html" class="btn btn-outline-primary">Compare CSV</a>
     </nav>
   </header>
 
@@ -91,22 +86,19 @@
   </main>
 
   <!-- Footer -->
-  <footer class="footer">
+  <footer class="footer text-center py-3 border-top">
     <div class="footer-bottom">
       © <span id="year"></span> All Rights Reserved & Developed by
       <a href="https://wrteam.in" target="_blank">WRTeam</a>
     </div>
   </footer>
-  <script src="footer.js"></script>
-  <script>
-    document.getElementById("year").textContent = new Date().getFullYear();
-  </script>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <!-- Unique Combine CSV Logic -->
+  <!-- CSV Logic -->
   <script>
+    // Utility Functions
     function parseCSV(text) {
       const rows = [];
       let field = '', row = [], insideQuote = false;
@@ -135,7 +127,10 @@
 
     let currentHeaders=[], currentData=[], sortState={};
 
+    // Main Logic
     document.addEventListener('DOMContentLoaded',()=>{
+      document.getElementById("year").textContent = new Date().getFullYear();
+
       document.getElementById('processBtn').addEventListener('click',async()=>{
         const files=document.getElementById('csvFiles').files;
         const checkHeaders=document.getElementById('checkHeaders').checked;
@@ -184,25 +179,33 @@
       });
     });
 
+    // Render Table
     function renderTable(headers,data){
-      const thead=document.querySelector('#resultTable thead');
-      const tbody=document.querySelector('#resultTable tbody');
+      const container = document.getElementById("resultTable");
+      if (!container) return console.error("❌ #resultTable not found");
+
+      const thead = container.querySelector("thead");
+      const tbody = container.querySelector("tbody");
+      if (!thead || !tbody) return console.error("❌ thead/tbody missing in #resultTable");
+
       thead.innerHTML='<tr>'+headers.map((h,i)=>`<th data-col="${i}">${escapeHtml(h)}</th>`).join('')+'</tr>';
       tbody.innerHTML=data.map(r=>'<tr>'+headers.map((_,i)=>`<td>${escapeHtml(r[i]||'')}</td>`).join('')+'</tr>').join('');
-      thead.querySelectorAll('th').forEach(th=>{
-        th.addEventListener('click',()=>sortByColumn(parseInt(th.dataset.col)));
+
+      thead.querySelectorAll("th").forEach(th=>{
+        th.addEventListener("click",()=>sortByColumn(parseInt(th.dataset.col)));
       });
     }
+
+    // Sort Columns
     function sortByColumn(col){
       const asc=!(sortState[col]&&sortState[col]==='asc');
       currentData.sort((a,b)=>asc?norm(a[col]).localeCompare(norm(b[col])):norm(b[col]).localeCompare(norm(a[col])));
       sortState={[col]:asc?'asc':'desc'};
       renderTable(currentHeaders,currentData);
       updateDownloadCSV();
-      const ths=document.querySelectorAll('#resultTable thead th');
-      ths.forEach((th,i)=>th.classList.remove('sorted-asc','sorted-desc'));
-      ths[col].classList.add(asc?'sorted-asc':'sorted-desc');
     }
+
+    // Update Download Link
     function updateDownloadCSV(){
       if(!currentHeaders.length)return;
       const csv=[currentHeaders.map(h=>csvEscape(h)).join(',')]
